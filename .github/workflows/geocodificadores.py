@@ -18,25 +18,24 @@ def showMap(foliumMap,name="routes"):
             
 #FUNCTION TO ADD THE ELEMENTS TO THE DICTIONARY OF CITIES
 def addRoute(cities,routename):
-    geolocator=Nominatim(user_agent='vpache3.12@gmail.com')
+    geolocator=Nominatim(user_agent='your_email')
     while True:
         city=input('ADD IN THE CITY\n')
-        if city=='basta':
-            break
+        if city=='STOP':
+            return cities
         try:
             g=geolocator.geocode(query=city)
             cities[city]={'LONGITUDE':g.longitude,'LATITUDE':g.latitude,'ROUTE':routename}
         except:
             city=input('WRONG ADDRESS!\n')
-    return cities
-
 cities={}
 print('WELCOME, THIS CODE WILL HELP YOU CREATE POLYLINES IN A FOLIUM MAP COMING FROM ADDRESSES OR CITY LOCATIONS\n REMEBER THAT THE WORD \'STOP\' WILL STOP THE CURRENT QUESTION')
 while True:
     routename=input('PLEASE ADD IN THE NAME OF THE ROUTE!')
     if routename.upper()=='STOP':
         break
-    cities=addRoute(cities,routename)
+    else:
+        cities=addRoute(cities,routename)
 
 #CREATING A GEODATAFRAME WITH THE VALUES FROM 
 gdf=geopandas.GeoDataFrame(data={'CITY':pd.Series([key for key in cities]),
