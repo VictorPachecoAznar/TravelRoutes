@@ -7,7 +7,7 @@ from geopy import Nominatim
 import folium
 import webbrowser
 
-def showMap(foliumMap,name="mapica"):
+def showMap(foliumMap,name="routes"):
     fn=name+".html"
     foliumMap.save(fn)
     webbrowser.open(fn)
