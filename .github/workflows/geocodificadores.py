@@ -1,3 +1,6 @@
+#VÍCTOR PACHECO AZNAR
+#JAN, 16TH 2024
+
 import geocoder 
 import geopandas
 import pandas as pd
@@ -7,62 +10,50 @@ from geopy import Nominatim
 import folium
 import webbrowser
 
+#THIS FUNCTION ALLOWS FOLIUM MAP VISUALIZATION IN HTML DOCUMENTS
 def showMap(foliumMap,name="routes"):
     fn=name+".html"
     foliumMap.save(fn)
     webbrowser.open(fn)
-
-def troubleshootImput(inputString,typeError,rangeError):
-    while type(inputString)!=int:
-        try:
-            integer=int(inputString)
-            if(integer>0):
-                return int(inputString)
-            else:
-                inputString=input(rangeError)
-        except:
-            inputString=input(typeError)
-
-def addRoute(cities,routename=0):
-    if routename==0:
-        routename=input('PLEASE ADD IN THE NAME OF THE ROUTE!')
-    maxCities=troubleshootImput(input('PLEASE ADD THE NUMBER OF DESIRED CITIES'),'PLEASE ONLY INTEGERS ALLOWED|','PLEASE ONLY POSITIVE INTEGERS!')
-    print('great job! now add your desired ',maxCities,'cities')
+            
+#FUNCTION TO ADD THE ELEMENTS TO THE DICTIONARY OF CITIES
+def addRoute(cities,routename):
     geolocator=Nominatim(user_agent='vpache3.12@gmail.com')
-    for i in range(maxCities):
-        city=input('ADD IN THE CITY')
+    while True:
+        city=input('ADD IN THE CITY\n')
+        if city=='basta':
+            break
         try:
             g=geolocator.geocode(query=city)
             cities[city]={'LONGITUDE':g.longitude,'LATITUDE':g.latitude,'ROUTE':routename}
-            print(cities[city])
         except:
-            city=input('wrong name for a city!')
+            city=input('WRONG ADDRESS!\n')
     return cities
 
 cities={}
-maxRoutes=troubleshootImput(input('PLEASE ADD THE MAX NUMBER OF ROUTES'),'ONLY INTEGERS ALLOWED!','PLEASE ONLY POSITIVE INTEGERS!')
-for i in range(maxRoutes):
-    cities=addRoute(cities)
+print('WELCOME, THIS CODE WILL HELP YOU CREATE POLYLINES IN A FOLIUM MAP COMING FROM ADDRESSES OR CITY LOCATIONS\n REMEBER THAT THE WORD \'STOP\' WILL STOP THE CURRENT QUESTION')
+while True:
+    routename=input('PLEASE ADD IN THE NAME OF THE ROUTE!')
+    if routename.upper()=='STOP':
+        break
+    cities=addRoute(cities,routename)
 
-gdf=geopandas.GeoDataFrame(data={'City':pd.Series([key for key in cities]),
-                                 'Longitude':pd.Series([cities[key]['LONGITUDE'] for key in cities]),
-                                 'Latitude':pd.Series([cities[key]['LATITUDE'] for key in cities]),
-                                 'Route':pd.Series([cities[key]['ROUTE'] for key in cities])})
-print(gdf)
-gdf['geometry']=geopandas.points_from_xy(x=gdf['Longitude'],y=gdf['Latitude'],crs=4326)
-routes=geopandas.GeoDataFrame(gdf.groupby(['Route'])['geometry'].apply(lambda x: LineString(x.tolist())),geometry='geometry',crs=4326)
-print(gdf)
-print(routes)
-gdf.plot()
+#CREATING A GEODATAFRAME WITH THE VALUES FROM 
+gdf=geopandas.GeoDataFrame(data={'CITY':pd.Series([key for key in cities]),
+                                 'LONGITUDE':pd.Series([cities[key]['LONGITUDE'] for key in cities]),
+                                 'LATITUDE':pd.Series([cities[key]['LATITUDE'] for key in cities]),
+                                 'ROUTE':pd.Series([cities[key]['ROUTE'] for key in cities])})
+
+#CREATING A POINT FOR EACH CITY IN THE DATAFRAME
+gdf['geometry']=geopandas.points_from_xy(x=gdf['LONGITUDE'],y=gdf['LATITUDE'],crs=4326)
+
+#CREATING A LINE THAT CONNECTS THE POINTS FROM EACH ROUTE
+routes=geopandas.GeoDataFrame(gdf.groupby(['ROUTE'])['geometry'].apply(lambda x: LineString(x.tolist())),geometry='geometry',crs=4326)
+
+#CREATING A FOLIUM MAP FROM THE GEODATAFRAME, ADDING A BASEMAP AND A LAYER MANAGER
 mapa=routes.explore()
 folium.TileLayer('openstreetmap').add_to(mapa)
 folium.LayerControl().add_to(mapa)
 
+#DISPLAYING A MAP
 showMap(mapa)
-routes.plot()
-#countriesDf=geopandas.read_file(geopandas.datasets.get_path('naturalearth_lowres'))
-#countriesDf.plot()
-plt.show()
-#g = geocoder.mapquest(['Mountain View, CA', 'Boulder, Co'], method='batch')
-#for result in g:
-#    print(result.address, result.latlng)
